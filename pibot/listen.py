@@ -6,7 +6,7 @@ import pyaudio
 import wave
 
 class Listen:
-    def __init__(self, threshold=500, chunk_size=1024, 
+    def __init__(self, threshold=700, chunk_size=1024, 
                  rate=44100, maximum=16384, num_channels=1,
                  num_silent_max=30, num_pad=0.5):
         self.threshold = threshold
