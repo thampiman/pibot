@@ -1,22 +1,25 @@
-from sys import byteorder
-from array import array
-from struct import pack
-
-import pyaudio
+import time
 import wave
+import pyaudio
+
+from struct import pack
+from array import array
+from sys import byteorder
+
 
 class Listen:
     def __init__(self, threshold=700, chunk_size=1024, 
                  rate=44100, maximum=16384, num_channels=1,
-                 num_silent_max=30, num_pad=0.5):
+                 num_silent_max=30, num_pad=0.5, record_timer_max=120):
         self.threshold = threshold
         self.chunk_size = chunk_size
         self.format = pyaudio.paInt16
         self.rate = rate
         self.maximum = maximum
         self.num_channels = 1
-        self.num_silent_max = num_silent_max
+        self.num_silent_max = num_silent_max # num iterations
         self.num_pad = num_pad
+        self.record_timer_max = record_timer_max # in seconds
 
     def is_silent(self, snd_data):
         "Returns 'True' if below the 'silent' threshold"
@@ -77,6 +80,7 @@ class Listen:
         snd_started = False
         r = array('h')
 
+        start_time = time.time()
         while 1:
             # little endian, signed short
             snd_data = array('h', stream.read(self.chunk_size))
@@ -91,6 +95,9 @@ class Listen:
                 snd_started = True
 
             if snd_started and num_silent > self.num_silent_max:
+                break
+
+            if time.time() - start_time > self.record_timer_max: # in seconds
                 break
 
         sample_width = p.get_sample_size(self.format)
