@@ -1,6 +1,9 @@
+import os
 import time
 import wave
 import pyaudio
+import argparse
+from os.path import join, splitext
 
 from struct import pack
 from array import array
@@ -9,8 +12,8 @@ from sys import byteorder
 
 class Listen:
     def __init__(self, threshold=700, chunk_size=1024, 
-                 rate=44100, maximum=16384, num_channels=1,
-                 num_silent_max=30, num_pad=0.5, record_timer_max=120):
+                 rate=16000, maximum=16384, num_channels=1,
+                 num_silent_max=30, num_pad=0.5, record_timer_max=10):
         self.threshold = threshold
         self.chunk_size = chunk_size
         self.format = pyaudio.paInt16
@@ -123,8 +126,22 @@ class Listen:
         wf.close()
 
 if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description='PiBot Listen')
+    parser.add_argument('store', type=str, help='path to store all files')
+    parser.add_argument('prefix', type=str, help='path to store all files')
+    args = parser.parse_args()
+
+    files = [f for f in os.listdir(args.store) if f.startswith(args.prefix) and f.endswith('wav')]
+    files.sort()
+    if len(files) > 0:
+        last_file = files[-1]
+        index = int(splitext(last_file)[0].split('_')[-1])
+        index += 1
+        filename = join(args.store, '%s_%s.wav' % (args.prefix, str(index).zfill(4)))
+    else:
+        filename = join(args.store, '%s_%s.wav' % (args.prefix, str(0).zfill(4)))
+
     print('Please speak into the microphone. Recording will stop when there is a pause...')
     listen = Listen()
-    filename = '/Users/ajay/Desktop/demo.wav'
     listen.record_to_file(filename)
     print('Done! File saved at %s' % filename)
